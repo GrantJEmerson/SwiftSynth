@@ -69,7 +69,7 @@ class SynthViewController: UIViewController {
         parameterLabel.text = "Frequency: 0 Hz  Amplitude: 0%"
     }
     
-    // MARK: Selector Functions
+    // MARK: Selector Function
     
     @objc private func updateOscillatorWaveform() {
         let waveform = Waveform(rawValue: waveformSelectorSegmentedControl.selectedSegmentIndex)!
