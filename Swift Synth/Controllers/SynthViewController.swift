@@ -46,17 +46,16 @@ class SynthViewController: UIViewController {
     // MARK: Implement Touches Functions
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        setPlaybackStateTo(true)
         guard let touch = touches.first else { return }
         let coord = touch.location(in: view)
         setSynthParametersFrom(coord)
+        setPlaybackStateTo(true)
     }
     
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let touch = touches.first else { return }
         let coord = touch.location(in: view)
         setSynthParametersFrom(coord)
-        
     }
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -84,6 +83,7 @@ class SynthViewController: UIViewController {
     
     @objc private func setPlaybackStateTo(_ state: Bool) {
         Synth.shared.volume = state ? 0.5 : 0
+        if !state { Synth.shared.frequency = 0 }
     }
     
     // MARK: Private Functions
@@ -108,10 +108,10 @@ class SynthViewController: UIViewController {
     
     private func setSynthParametersFrom(_ coord: CGPoint) {
         Oscillator.amplitude = Float((view.bounds.height - coord.y) / view.bounds.height) 
-        Oscillator.frequency = Float(coord.x / view.bounds.width) * 1014 + 32
+        Synth.shared.frequency = Float(coord.x / view.bounds.width) * 1014 + 32
         
         let amplitudePercent = Int(Oscillator.amplitude * 100)
-        let frequencyHertz = Int(Oscillator.frequency)
+        let frequencyHertz = Int(Synth.shared.frequency)
         parameterLabel.text = "Frequency: \(frequencyHertz) Hz  Amplitude: \(amplitudePercent)%"
     }
 }

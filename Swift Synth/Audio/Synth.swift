@@ -7,7 +7,6 @@
 //
 
 import AVFoundation
-import Foundation
 
 class Synth {
     
@@ -20,22 +19,45 @@ class Synth {
             audioEngine.mainMixerNode.outputVolume = newValue
         }
         get {
-            return audioEngine.mainMixerNode.outputVolume
+            audioEngine.mainMixerNode.outputVolume
+        }
+    }
+    
+    public var frequencyRampValue: Float = 0
+    
+    public var frequency: Float = 440 {
+        didSet {
+            if oldValue != 0 {
+                frequencyRampValue = frequency - oldValue
+            } else {
+                frequencyRampValue = 0
+            }
         }
     }
 
     private var audioEngine: AVAudioEngine
-    private lazy var sourceNode = AVAudioSourceNode { (_, _, frameCount, audioBufferList) -> OSStatus in
+    private lazy var sourceNode = AVAudioSourceNode { _, _, frameCount, audioBufferList in
         let ablPointer = UnsafeMutableAudioBufferListPointer(audioBufferList)
-        for frame in 0..<Int(frameCount) {
-            let sampleVal = self.signal(self.time)
-            self.time += self.deltaTime
+                
+        let localRampValue = self.frequencyRampValue
+        let localFrequency = self.frequency - localRampValue
+        
+        let period = 1 / localFrequency
 
+        for frame in 0..<Int(frameCount) {
+            let percentComplete = self.time / period
+            let sampleVal = self.signal(localFrequency + localRampValue * percentComplete, self.time)
+            self.time += self.deltaTime
+            self.time = fmod(self.time, period)
+            
             for buffer in ablPointer {
                 let buf: UnsafeMutableBufferPointer<Float> = UnsafeMutableBufferPointer(buffer)
                 buf[frame] = sampleVal
             }
         }
+        
+        self.frequencyRampValue = 0
+        
         return noErr
     }
     
@@ -60,7 +82,7 @@ class Synth {
         self.signal = signal
         
         let inputFormat = AVAudioFormat(commonFormat: format.commonFormat,
-                                        sampleRate: sampleRate,
+                                        sampleRate: format.sampleRate,
                                         channels: 1,
                                         interleaved: format.isInterleaved)
         

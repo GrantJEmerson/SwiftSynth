@@ -8,7 +8,7 @@
 
 import Foundation
 
-typealias Signal = (Float) -> (Float)
+typealias Signal = (_ frequency: Float, _ time: Float) -> Float
 
 enum Waveform: Int {
     case sine, triangle, sawtooth, square, whiteNoise
@@ -17,14 +17,13 @@ enum Waveform: Int {
 struct Oscillator {
     
     static var amplitude: Float = 1
-    static var frequency: Float = 440
     
-    static let sine = { (time: Float) -> Float in
-        return Oscillator.amplitude * sin(2.0 * Float.pi * Oscillator.frequency * time)
+    static let sine: Signal = { frequency, time in
+        return Oscillator.amplitude * sin(2.0 * Float.pi * frequency * time)
     }
     
-    static let triangle = { (time: Float) -> Float in
-        let period = 1.0 / Double(Oscillator.frequency)
+    static let triangle: Signal = { frequency, time in
+        let period = 1.0 / Double(frequency)
         let currentTime = fmod(Double(time), period)
         
         let value = currentTime / period
@@ -41,19 +40,19 @@ struct Oscillator {
         return Oscillator.amplitude * Float(result)
     }
 
-    static let sawtooth = { (time: Float) -> Float in
-        let period = 1.0 / Oscillator.frequency
+    static let sawtooth: Signal = { frequency, time in
+        let period = 1.0 / frequency
         let currentTime = fmod(Double(time), Double(period))
         return Oscillator.amplitude * ((Float(currentTime) / period) * 2 - 1.0)
     }
     
-    static let square = { (time: Float) -> Float in
-        let period = 1.0 / Double(Oscillator.frequency)
+    static let square: Signal = { frequency, time in
+        let period = 1.0 / Double(frequency)
         let currentTime = fmod(Double(time), period)
         return ((currentTime / period) < 0.5) ? Oscillator.amplitude : -1.0 * Oscillator.amplitude
     }
     
-    static let whiteNoise = { (time: Float) -> Float in
+    static let whiteNoise: Signal = { frequency, time in
         return Oscillator.amplitude * Float.random(in: -1...1)
     }
 }
